@@ -8,13 +8,23 @@ const { Server } = require("socket.io");
 const app = express();
 
 
-app.use(cors());
+// Allow frontend from Vercel + local testing
+app.use(
+    cors({
+        origin: [
+            "https://chat-app-six-kohl-38.vercel.app",
+            "http://localhost:5000"
+        ],
+        methods: ["GET","POST"],
+        credentials: true
+    })
+);
 
 
 app.use(express.json());
 
 
-// frontend folder serve cheyyadam
+// frontend files serve
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 
@@ -26,8 +36,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
 
     cors: {
-        origin: "*",
-        methods: ["GET","POST"]
+        origin: [
+            "https://chat-app-six-kohl-38.vercel.app",
+            "http://localhost:5000"
+        ],
+        methods:["GET","POST"],
+        credentials:true
     }
 
 });
@@ -35,7 +49,9 @@ const io = new Server(server, {
 
 
 
-// home page
+
+// Home page
+
 app.get("/", (req,res)=>{
 
     res.sendFile(
@@ -48,22 +64,24 @@ app.get("/", (req,res)=>{
 
 
 
+
 io.on("connection",(socket)=>{
 
 
-    console.log("User connected:", socket.id);
+    console.log("User connected:",socket.id);
 
 
 
     socket.on("send_message",(data)=>{
 
 
-        console.log("Message received:", data);
+        console.log("Message:",data);
 
 
-
-        // andariki message pampistundi
-        io.emit("receive_message", data);
+        io.emit(
+            "receive_message",
+            data
+        );
 
 
     });
@@ -75,7 +93,7 @@ io.on("connection",(socket)=>{
     socket.on("disconnect",()=>{
 
 
-        console.log("User disconnected:", socket.id);
+        console.log("User disconnected:",socket.id);
 
 
     });
@@ -88,7 +106,8 @@ io.on("connection",(socket)=>{
 
 
 
-// IMPORTANT for other devices
+
+
 server.listen(5000,"0.0.0.0",()=>{
 
 
