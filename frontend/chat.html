@@ -1,126 +1,103 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
 <title>ChatSphere</title>
 
-<script src="/socket.io/socket.io.js"></script>
-
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <style>
 
+*{
+    box-sizing:border-box;
+}
+
 body{
-
-margin:0;
-height:100vh;
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-font-family:Segoe UI;
-
-background:linear-gradient(135deg,#020024,#090979,#00d4ff);
-
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:
+    linear-gradient(135deg,#141e30,#243b55);
+    font-family:Arial, sans-serif;
 }
 
 
-.container{
+.chat-box{
 
-width:450px;
-height:600px;
-
-background:white;
-
-border-radius:20px;
-
-overflow:hidden;
+    width:420px;
+    height:600px;
+    background:white;
+    border-radius:25px;
+    overflow:hidden;
+    box-shadow:0 20px 50px black;
 
 }
 
 
 .header{
 
-background:#111;
-
-color:white;
-
-padding:20px;
-
-text-align:center;
-
-font-size:24px;
+    background:#111827;
+    color:white;
+    padding:20px;
+    text-align:center;
 
 }
 
 
-#role{
+.header h2{
+    margin:0;
+}
 
-color:#00ff99;
 
-font-size:14px;
-
+.role{
+    color:#4ade80;
+    margin-top:5px;
 }
 
 
 
-#chatBox{
+.messages{
 
-height:420px;
-
-padding:15px;
-
-overflow:auto;
+    height:430px;
+    padding:15px;
+    overflow-y:auto;
+    background:#f3f4f6;
 
 }
 
 
 
-.msg{
+.message{
 
-padding:10px;
-
-margin:10px;
-
-border-radius:15px;
-
-background:#ddd;
-
-}
-
-
-
-.me{
-
-background:#00eaff;
+    background:#2563eb;
+    color:white;
+    padding:10px 15px;
+    margin:10px;
+    width:fit-content;
+    max-width:70%;
+    border-radius:15px;
 
 }
 
 
 
-.bottom{
+.input-area{
 
-display:flex;
-
-gap:10px;
-
-padding:15px;
+    display:flex;
+    padding:15px;
+    gap:10px;
 
 }
-
 
 
 input{
 
-flex:1;
-
-padding:15px;
-
-border-radius:20px;
-
-border:1px solid gray;
+    flex:1;
+    padding:12px;
+    border-radius:20px;
+    border:1px solid gray;
+    outline:none;
 
 }
 
@@ -128,82 +105,67 @@ border:1px solid gray;
 
 button{
 
-padding:15px 25px;
-
-border:none;
-
-border-radius:20px;
-
-background:#00ff99;
-
-cursor:pointer;
+    padding:12px 20px;
+    border:none;
+    border-radius:20px;
+    background:#22c55e;
+    color:white;
+    cursor:pointer;
 
 }
 
 
+button:hover{
+
+background:#16a34a;
+
+}
+
 
 </style>
 
-
 </head>
-
 
 
 <body>
 
 
-
-<div class="container">
+<div class="chat-box">
 
 
 <div class="header">
 
-💬 ChatSphere
+<h2>💬 ChatSphere</h2>
 
-<div id="role"></div>
+<div class="role">
+Logged in as: User
+</div>
 
 </div>
 
 
 
-
-<div id="chatBox">
-
-
-<div class="msg">
-
-Welcome 👋
-
-</div>
-
-
-</div>
+<div class="messages" id="messages"></div>
 
 
 
+<div class="input-area">
 
-<div class="bottom">
-
-
-<input id="messageInput"
-placeholder="Type message">
-
-
+<input 
+id="msg"
+placeholder="Type your message..."
+autocomplete="off"
+/>
 
 <button onclick="sendMessage()">
-
 Send
-
 </button>
 
 
-
 </div>
 
 
 </div>
-
-
 
 
 
@@ -212,39 +174,17 @@ Send
 <script>
 
 
-let role = localStorage.getItem("userRole");
+// Render backend connection
+
+const socket = io(
+"https://chat-app-5e7i.onrender.com"
+);
 
 
 
-if(!role){
+const input=document.getElementById("msg");
 
-window.location.href="index.html";
-
-}
-
-
-
-document.getElementById("role").innerHTML =
-"Logged in as : "+role;
-
-
-
-
-
-const socket = io();
-
-
-
-
-
-socket.on("connect",()=>{
-
-
-console.log("CONNECTED TO SERVER");
-
-
-});
-
+const messages=document.getElementById("messages");
 
 
 
@@ -253,31 +193,22 @@ console.log("CONNECTED TO SERVER");
 function sendMessage(){
 
 
-let input =
-document.getElementById("messageInput");
+let text=input.value.trim();
 
 
-let text=input.value;
-
-
-
-if(text.trim()==""){
-
+if(text===""){
 return;
-
 }
 
 
 
-socket.emit("send_message",{
-
-
-user:role,
-
-message:text
-
-
-});
+socket.emit(
+"send_message",
+{
+message:text,
+user:"User"
+}
+);
 
 
 
@@ -290,44 +221,17 @@ input.value="";
 
 
 
+// Enter press send
 
-socket.on("receive_message",(data)=>{
+input.addEventListener(
+"keypress",
+function(e){
 
+if(e.key==="Enter"){
 
-let box =
-document.getElementById("chatBox");
-
-
-
-let div =
-document.createElement("div");
-
-
-
-div.className="msg";
-
-
-
-if(data.user==role){
-
-div.classList.add("me");
+sendMessage();
 
 }
-
-
-
-div.innerHTML =
-data.user+" : "+data.message;
-
-
-
-box.appendChild(div);
-
-
-
-box.scrollTop=box.scrollHeight;
-
-
 
 });
 
@@ -336,20 +240,27 @@ box.scrollTop=box.scrollHeight;
 
 
 
+socket.on(
+"receive_message",
+(data)=>{
 
 
-document
-.getElementById("messageInput")
-.addEventListener("keypress",(e)=>{
+let div=document.createElement("div");
+
+div.className="message";
 
 
-if(e.key==="Enter"){
+div.innerHTML=
+"<b>"+data.user+"</b><br>"+data.message;
 
 
-sendMessage();
+
+messages.appendChild(div);
 
 
-}
+
+messages.scrollTop =
+messages.scrollHeight;
 
 
 });
@@ -361,6 +272,4 @@ sendMessage();
 
 
 </body>
-
-
 </html>
