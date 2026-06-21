@@ -15,7 +15,6 @@ box-sizing:border-box;
 }
 
 body{
-
 margin:0;
 height:100vh;
 display:flex;
@@ -23,38 +22,30 @@ justify-content:center;
 align-items:center;
 background:linear-gradient(135deg,#141e30,#243b55);
 font-family:Arial;
-
 }
 
 
 .chat-box{
-
 width:420px;
 height:600px;
 background:white;
 border-radius:25px;
 overflow:hidden;
 box-shadow:0 20px 50px black;
-
 }
 
 
 
 .header{
-
 background:#111827;
 color:white;
 padding:20px;
 text-align:center;
-
 }
 
 
-
 .role{
-
 color:#4ade80;
-
 }
 
 
@@ -74,7 +65,7 @@ background:#f3f4f6;
 
 background:#2563eb;
 color:white;
-padding:10px;
+padding:10px 15px;
 margin:10px;
 border-radius:15px;
 width:max-content;
@@ -100,7 +91,6 @@ flex:1;
 padding:12px;
 border-radius:20px;
 border:1px solid gray;
-
 }
 
 
@@ -116,13 +106,10 @@ cursor:pointer;
 
 }
 
-
-
 </style>
 
 
 </head>
-
 
 
 <body>
@@ -140,6 +127,7 @@ cursor:pointer;
 Connecting...
 </div>
 
+
 </div>
 
 
@@ -151,7 +139,8 @@ Connecting...
 <div class="input-area">
 
 
-<input id="msg"
+<input 
+id="msg"
 placeholder="Type message..."
 autocomplete="off">
 
@@ -164,7 +153,6 @@ Send
 </div>
 
 
-
 </div>
 
 
@@ -174,12 +162,15 @@ Send
 <script>
 
 
+// Render backend socket
+
 const socket = io(
 "https://chat-app-5e7i.onrender.com",
 {
-transports:["websocket"]
+    transports:["polling"]
 }
 );
+
 
 
 
@@ -202,24 +193,35 @@ document.getElementById("status");
 
 
 
+
 socket.on("connect",()=>{
+
 
 status.innerHTML="🟢 Online - User";
 
-console.log("Socket connected");
+
+console.log("Connected",socket.id);
+
 
 });
 
 
 
-socket.on("connect_error",(err)=>{
+
+
+socket.on("connect_error",(error)=>{
+
 
 status.innerHTML="🔴 Server Error";
 
-console.log(err);
+
+console.log(
+"Connection error",
+error
+);
+
 
 });
-
 
 
 
@@ -236,10 +238,6 @@ let text=input.value.trim();
 if(text===""){
 return;
 }
-
-
-
-console.log("Sending:",text);
 
 
 
@@ -263,21 +261,17 @@ input.value="";
 
 
 
-button.addEventListener(
-"click",
-sendMessage
-);
-
+button.onclick = sendMessage;
 
 
 
 
 input.addEventListener(
-"keypress",
-(e)=>{
+"keydown",
+function(event){
 
 
-if(e.key==="Enter"){
+if(event.key==="Enter"){
 
 sendMessage();
 
@@ -294,21 +288,27 @@ sendMessage();
 
 socket.on(
 "receive_message",
-(data)=>{
+function(data){
 
 
-let div=document.createElement("div");
+
+let div =
+document.createElement("div");
+
 
 
 div.className="message";
 
 
-div.innerHTML=
-"<b>"+data.user+"</b><br>"+data.message;
+div.innerHTML =
+"<b>"+data.user+
+"</b><br>"+
+data.message;
 
 
 
 messages.appendChild(div);
+
 
 
 messages.scrollTop =
@@ -317,6 +317,7 @@ messages.scrollHeight;
 
 
 });
+
 
 
 </script>
