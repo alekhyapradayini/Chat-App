@@ -8,28 +8,27 @@ const { Server } = require("socket.io");
 const app = express();
 
 
-// CORS
-app.use(
-    cors({
-        origin: [
-            "https://chat-app-six-kohl-38.vercel.app",
-            "http://localhost:5000"
-        ],
-        methods: ["GET","POST"],
-        credentials: true
-    })
-);
+app.use(cors({
+    origin: "*",
+    methods: ["GET","POST"]
+}));
 
 
 app.use(express.json());
 
 
-// Frontend serve
-app.use(
-    express.static(
-        path.join(__dirname,"../frontend")
-    )
-);
+// frontend serve cheyyadaniki
+app.use(express.static(
+    path.join(__dirname,"../frontend")
+));
+
+
+
+app.get("/",(req,res)=>{
+
+    res.send("Chat Server Running");
+
+});
 
 
 
@@ -40,24 +39,9 @@ const server = http.createServer(app);
 const io = new Server(server,{
 
     cors:{
-        origin:[
-            "https://chat-app-six-kohl-38.vercel.app",
-            "http://localhost:5000"
-        ],
-        methods:["GET","POST"],
-        credentials:true
+        origin:"*",
+        methods:["GET","POST"]
     }
-
-});
-
-
-
-
-// test route
-
-app.get("/",(req,res)=>{
-
-    res.send("Chat Server Running");
 
 });
 
@@ -68,42 +52,54 @@ app.get("/",(req,res)=>{
 io.on("connection",(socket)=>{
 
 
-    console.log("Connected:",socket.id);
+    console.log(
+        "User connected:",
+        socket.id
+    );
 
 
 
-    socket.on("send_message",(data)=>{
+    socket.on(
+        "send_message",
+        (data)=>{
 
 
-        console.log("Message received:",data);
-
-
-
-        io.emit(
-            "receive_message",
-            data
-        );
-
-
-    });
+            console.log(
+                "Message:",
+                data
+            );
 
 
 
-
-    socket.on("disconnect",()=>{
-
-
-        console.log(
-            "Disconnected:",
-            socket.id
-        );
+            io.emit(
+                "receive_message",
+                data
+            );
 
 
-    });
+        }
+    );
+
+
+
+
+
+    socket.on(
+        "disconnect",
+        ()=>{
+
+
+            console.log(
+                "User disconnected",
+                socket.id
+            );
+
+
+        }
+    );
 
 
 });
-
 
 
 
@@ -112,14 +108,15 @@ io.on("connection",(socket)=>{
 const PORT = process.env.PORT || 5000;
 
 
+
 server.listen(
     PORT,
-    "0.0.0.0",
     ()=>{
 
-    console.log(
-        "Server running on port",
-        PORT
-    );
+        console.log(
+            "Chat Server Running on port",
+            PORT
+        );
 
-});
+    }
+);
