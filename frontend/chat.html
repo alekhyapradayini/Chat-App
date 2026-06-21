@@ -1,217 +1,79 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-
-<title>ChatSphere</title>
-
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
-
-<style>
-
-*{
-box-sizing:border-box;
-}
-
-body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#141e30,#243b55);
-font-family:Arial;
-}
-
-
-.chat-box{
-width:420px;
-height:600px;
-background:white;
-border-radius:25px;
-overflow:hidden;
-box-shadow:0 20px 50px black;
-}
-
-
-.header{
-background:#111827;
-color:white;
-padding:20px;
-text-align:center;
-}
-
-
-#status{
-color:#4ade80;
-}
-
-
-.messages{
-height:430px;
-padding:15px;
-overflow-y:auto;
-background:#f3f4f6;
-}
-
-
-.message{
-background:#2563eb;
-color:white;
-padding:10px 15px;
-margin:10px;
-border-radius:15px;
-width:max-content;
-max-width:75%;
-}
-
-
-.input-area{
-display:flex;
-padding:15px;
-gap:10px;
-}
-
-
-input{
-flex:1;
-padding:12px;
-border-radius:20px;
-border:1px solid gray;
-}
-
-
-button{
-padding:12px 20px;
-border:none;
-border-radius:20px;
-background:#22c55e;
-color:white;
-cursor:pointer;
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<div class="chat-box">
-
-
-<div class="header">
-
-<h2>💬 ChatSphere</h2>
-
-<div id="status">
-Connecting...
-</div>
-
-</div>
-
-
-
-<div id="messages" class="messages"></div>
-
-
-
-<div class="input-area">
-
-<input id="msg" placeholder="Type message">
-
-<button onclick="sendMessage()">
-Send
-</button>
-
-</div>
-
-
-</div>
-
-
-
-
-
 <script>
 
-
-const socket = io(
-"https://chat-app-5e7i.onrender.com",
-{
-transports:["websocket","polling"],
-secure:true
-}
-);
+const socket = io("https://chat-app-5e7i.onrender.com", {
+    transports: ["polling","websocket"]
+});
 
 
-
-const status =
-document.getElementById("status");
-
-
-const messages =
-document.getElementById("messages");
-
-
-const input =
-document.getElementById("msg");
-
-
+const input = document.getElementById("msg");
+const button = document.getElementById("sendBtn");
+const messages = document.getElementById("messages");
+const status = document.getElementById("status");
 
 
 socket.on("connect",()=>{
 
-console.log("CONNECTED");
+    status.innerHTML="🟢 Online - User";
 
-status.innerHTML =
-"🟢 Online";
+    console.log(
+        "CONNECTED:",
+        socket.id
+    );
 
 });
-
 
 
 socket.on("connect_error",(err)=>{
 
-console.log(err);
+    status.innerHTML="🔴 Server Error";
 
-status.innerHTML =
-"🔴 Server Error";
+    console.log(
+        "ERROR:",
+        err.message
+    );
 
 });
-
-
 
 
 
 function sendMessage(){
 
+    let text = input.value.trim();
 
-let text =
-input.value.trim();
-
-
-if(!text) return;
+    if(!text) return;
 
 
+    socket.emit(
+        "send_message",
+        {
+            user:"User",
+            message:text
+        }
+    );
 
-socket.emit(
-"send_message",
-{
-user:"User",
-message:text
+
+    input.value="";
+
 }
+
+
+
+button.addEventListener(
+"click",
+sendMessage
 );
 
 
 
-input.value="";
+input.addEventListener(
+"keydown",
+(e)=>{
 
-
+if(e.key==="Enter"){
+    sendMessage();
 }
 
+});
 
 
 
@@ -221,20 +83,16 @@ socket.on(
 (data)=>{
 
 
-let div =
-document.createElement("div");
-
+let div=document.createElement("div");
 
 div.className="message";
 
 
 div.innerHTML =
-"<b>"+
-data.user+
-"</b><br>"+
-data.message;
-
-
+`
+<b>${data.user}</b><br>
+${data.message}
+`;
 
 messages.appendChild(div);
 
@@ -247,26 +105,4 @@ messages.scrollHeight;
 
 
 
-
-input.addEventListener(
-"keypress",
-(e)=>{
-
-
-if(e.key==="Enter"){
-
-sendMessage();
-
-}
-
-
-});
-
-
-
 </script>
-
-
-</body>
-
-</html>
