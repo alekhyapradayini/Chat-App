@@ -1,82 +1,83 @@
-const express = require("express");
-const http = require("http");
-const cors = require("cors");
-const { Server } = require("socket.io");
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
-const app = express();
+<script>
 
-app.use(cors({
-    origin:"*",
-    methods:["GET","POST"]
-}));
-
-app.use(express.json());
-
-
-app.get("/",(req,res)=>{
-    res.send("Chat Server Running");
+const socket = io("https://chat-app-5e7i.onrender.com", {
+    transports:["polling"],
+    reconnection:true
 });
 
 
-const server = http.createServer(app);
+const input = document.getElementById("msg");
+const button = document.getElementById("sendBtn");
+const messages = document.getElementById("messages");
+const status = document.getElementById("status");
 
 
-const io = new Server(server,{
-
-    cors:{
-        origin:"*",
-        methods:["GET","POST"]
-    },
-
-    transports:["polling","websocket"]
-
+socket.on("connect",()=>{
+    status.innerHTML="🟢 Online";
+    console.log("CONNECTED:",socket.id);
 });
 
 
-
-io.on("connection",(socket)=>{
-
-
-    console.log("User connected:",socket.id);
-
+socket.on("connect_error",(err)=>{
+    status.innerHTML="🔴 Connection failed";
+    console.log(err.message);
+});
 
 
-    socket.on("send_message",(data)=>{
+function addMessage(data){
+
+    let div=document.createElement("div");
+
+    div.className="message";
+
+    div.innerHTML =
+    "<b>"+data.user+"</b><br>"+data.message;
+
+    messages.appendChild(div);
+
+    messages.scrollTop=messages.scrollHeight;
+}
 
 
-        console.log("Message:",data);
+
+function sendMessage(){
+
+    let text=input.value.trim();
+
+    if(!text)return;
 
 
-
-        io.emit(
-            "receive_message",
-            data
-        );
-
-
+    socket.emit("send_message",{
+        user:"User",
+        message:text
     });
 
 
-
-    socket.on("disconnect",()=>{
-
-        console.log("User disconnected");
-
-    });
+    input.value="";
+}
 
 
+
+button.onclick=sendMessage;
+
+
+input.addEventListener("keydown",(e)=>{
+
+    if(e.key==="Enter"){
+        sendMessage();
+    }
+
+});
+
+
+
+socket.on("receive_message",(data)=>{
+
+    addMessage(data);
 
 });
 
 
-
-const PORT = process.env.PORT || 5000;
-
-
-server.listen(PORT,"0.0.0.0",()=>{
-
-    console.log(
-        "Chat Server Running on port "+PORT
-    );
-
-});
+</script>
