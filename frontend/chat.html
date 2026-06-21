@@ -1,68 +1,70 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <title>ChatSphere</title>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
+
 <style>
 
 *{
-    box-sizing:border-box;
+box-sizing:border-box;
 }
 
 body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:
-    linear-gradient(135deg,#141e30,#243b55);
-    font-family:Arial, sans-serif;
+
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#141e30,#243b55);
+font-family:Arial;
+
 }
 
 
 .chat-box{
 
-    width:420px;
-    height:600px;
-    background:white;
-    border-radius:25px;
-    overflow:hidden;
-    box-shadow:0 20px 50px black;
+width:420px;
+height:600px;
+background:white;
+border-radius:25px;
+overflow:hidden;
+box-shadow:0 20px 50px black;
 
 }
+
 
 
 .header{
 
-    background:#111827;
-    color:white;
-    padding:20px;
-    text-align:center;
+background:#111827;
+color:white;
+padding:20px;
+text-align:center;
 
 }
 
-
-.header h2{
-    margin:0;
-}
 
 
 .role{
-    color:#4ade80;
-    margin-top:5px;
+
+color:#4ade80;
+
 }
 
 
 
 .messages{
 
-    height:430px;
-    padding:15px;
-    overflow-y:auto;
-    background:#f3f4f6;
+height:430px;
+padding:15px;
+overflow-y:auto;
+background:#f3f4f6;
 
 }
 
@@ -70,13 +72,13 @@ body{
 
 .message{
 
-    background:#2563eb;
-    color:white;
-    padding:10px 15px;
-    margin:10px;
-    width:fit-content;
-    max-width:70%;
-    border-radius:15px;
+background:#2563eb;
+color:white;
+padding:10px;
+margin:10px;
+border-radius:15px;
+width:max-content;
+max-width:75%;
 
 }
 
@@ -84,20 +86,20 @@ body{
 
 .input-area{
 
-    display:flex;
-    padding:15px;
-    gap:10px;
+display:flex;
+padding:15px;
+gap:10px;
 
 }
 
 
+
 input{
 
-    flex:1;
-    padding:12px;
-    border-radius:20px;
-    border:1px solid gray;
-    outline:none;
+flex:1;
+padding:12px;
+border-radius:20px;
+border:1px solid gray;
 
 }
 
@@ -105,29 +107,26 @@ input{
 
 button{
 
-    padding:12px 20px;
-    border:none;
-    border-radius:20px;
-    background:#22c55e;
-    color:white;
-    cursor:pointer;
+padding:12px 20px;
+border:none;
+border-radius:20px;
+background:#22c55e;
+color:white;
+cursor:pointer;
 
 }
 
-
-button:hover{
-
-background:#16a34a;
-
-}
 
 
 </style>
 
+
 </head>
 
 
+
 <body>
+
 
 
 <div class="chat-box">
@@ -137,8 +136,8 @@ background:#16a34a;
 
 <h2>💬 ChatSphere</h2>
 
-<div class="role">
-Logged in as: User
+<div class="role" id="status">
+Connecting...
 </div>
 
 </div>
@@ -151,18 +150,19 @@ Logged in as: User
 
 <div class="input-area">
 
-<input 
-id="msg"
-placeholder="Type your message..."
-autocomplete="off"
-/>
 
-<button onclick="sendMessage()">
+<input id="msg"
+placeholder="Type message..."
+autocomplete="off">
+
+
+<button id="sendBtn">
 Send
 </button>
 
 
 </div>
+
 
 
 </div>
@@ -174,17 +174,53 @@ Send
 <script>
 
 
-// Render backend connection
-
 const socket = io(
-"https://chat-app-5e7i.onrender.com"
+"https://chat-app-5e7i.onrender.com",
+{
+transports:["websocket"]
+}
 );
 
 
 
-const input=document.getElementById("msg");
+const input =
+document.getElementById("msg");
 
-const messages=document.getElementById("messages");
+
+const button =
+document.getElementById("sendBtn");
+
+
+const messages =
+document.getElementById("messages");
+
+
+const status =
+document.getElementById("status");
+
+
+
+
+
+socket.on("connect",()=>{
+
+status.innerHTML="🟢 Online - User";
+
+console.log("Socket connected");
+
+});
+
+
+
+socket.on("connect_error",(err)=>{
+
+status.innerHTML="🔴 Server Error";
+
+console.log(err);
+
+});
+
+
 
 
 
@@ -196,17 +232,22 @@ function sendMessage(){
 let text=input.value.trim();
 
 
+
 if(text===""){
 return;
 }
 
 
 
+console.log("Sending:",text);
+
+
+
 socket.emit(
 "send_message",
 {
-message:text,
-user:"User"
+user:"User",
+message:text
 }
 );
 
@@ -221,11 +262,20 @@ input.value="";
 
 
 
-// Enter press send
+
+button.addEventListener(
+"click",
+sendMessage
+);
+
+
+
+
 
 input.addEventListener(
 "keypress",
-function(e){
+(e)=>{
+
 
 if(e.key==="Enter"){
 
@@ -233,7 +283,9 @@ sendMessage();
 
 }
 
+
 });
+
 
 
 
@@ -247,6 +299,7 @@ socket.on(
 
 let div=document.createElement("div");
 
+
 div.className="message";
 
 
@@ -258,13 +311,12 @@ div.innerHTML=
 messages.appendChild(div);
 
 
-
 messages.scrollTop =
 messages.scrollHeight;
 
 
-});
 
+});
 
 
 </script>
@@ -272,4 +324,5 @@ messages.scrollHeight;
 
 
 </body>
+
 </html>

@@ -8,7 +8,7 @@ const { Server } = require("socket.io");
 const app = express();
 
 
-// Allow frontend from Vercel + local testing
+// CORS
 app.use(
     cors({
         origin: [
@@ -24,8 +24,12 @@ app.use(
 app.use(express.json());
 
 
-// frontend files serve
-app.use(express.static(path.join(__dirname, "../frontend")));
+// Frontend serve
+app.use(
+    express.static(
+        path.join(__dirname,"../frontend")
+    )
+);
 
 
 
@@ -33,10 +37,10 @@ const server = http.createServer(app);
 
 
 
-const io = new Server(server, {
+const io = new Server(server,{
 
-    cors: {
-        origin: [
+    cors:{
+        origin:[
             "https://chat-app-six-kohl-38.vercel.app",
             "http://localhost:5000"
         ],
@@ -49,17 +53,13 @@ const io = new Server(server, {
 
 
 
+// test route
 
-// Home page
+app.get("/",(req,res)=>{
 
-app.get("/", (req,res)=>{
-
-    res.sendFile(
-        path.join(__dirname,"../frontend/index.html")
-    );
+    res.send("Chat Server Running");
 
 });
-
 
 
 
@@ -68,14 +68,15 @@ app.get("/", (req,res)=>{
 io.on("connection",(socket)=>{
 
 
-    console.log("User connected:",socket.id);
+    console.log("Connected:",socket.id);
 
 
 
     socket.on("send_message",(data)=>{
 
 
-        console.log("Message:",data);
+        console.log("Message received:",data);
+
 
 
         io.emit(
@@ -89,15 +90,16 @@ io.on("connection",(socket)=>{
 
 
 
-
     socket.on("disconnect",()=>{
 
 
-        console.log("User disconnected:",socket.id);
+        console.log(
+            "Disconnected:",
+            socket.id
+        );
 
 
     });
-
 
 
 });
@@ -107,11 +109,17 @@ io.on("connection",(socket)=>{
 
 
 
+const PORT = process.env.PORT || 5000;
 
-server.listen(5000,"0.0.0.0",()=>{
 
+server.listen(
+    PORT,
+    "0.0.0.0",
+    ()=>{
 
-    console.log("Server running on port 5000");
-
+    console.log(
+        "Server running on port",
+        PORT
+    );
 
 });
