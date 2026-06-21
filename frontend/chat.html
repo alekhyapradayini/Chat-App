@@ -1,318 +1,68 @@
-<!DOCTYPE html>
-<html>
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const { Server } = require("socket.io");
 
-<head>
+const app = express();
 
-<title>ChatSphere</title>
+app.use(cors({
+    origin:"*",
+    methods:["GET","POST"]
+}));
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+app.use(express.json());
 
 
-<style>
+app.get("/",(req,res)=>{
+    res.send("Chat Server Running");
+});
 
-*{
-box-sizing:border-box;
-}
 
-body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#141e30,#243b55);
-font-family:Arial;
-}
+const server = http.createServer(app);
 
 
-.chat-box{
-width:420px;
-height:600px;
-background:white;
-border-radius:25px;
-overflow:hidden;
-box-shadow:0 20px 50px black;
-}
+const io = new Server(server,{
 
+    cors:{
+        origin:"*",
+        methods:["GET","POST"]
+    },
 
-
-.header{
-background:#111827;
-color:white;
-padding:20px;
-text-align:center;
-}
-
-
-.role{
-color:#4ade80;
-}
-
-
-
-.messages{
-
-height:430px;
-padding:15px;
-overflow-y:auto;
-background:#f3f4f6;
-
-}
-
-
-
-.message{
-
-background:#2563eb;
-color:white;
-padding:10px 15px;
-margin:10px;
-border-radius:15px;
-width:max-content;
-max-width:75%;
-
-}
-
-
-
-.input-area{
-
-display:flex;
-padding:15px;
-gap:10px;
-
-}
-
-
-
-input{
-
-flex:1;
-padding:12px;
-border-radius:20px;
-border:1px solid gray;
-}
-
-
-
-button{
-
-padding:12px 20px;
-border:none;
-border-radius:20px;
-background:#22c55e;
-color:white;
-cursor:pointer;
-
-}
-
-</style>
-
-
-</head>
-
-
-<body>
-
-
-
-<div class="chat-box">
-
-
-<div class="header">
-
-<h2>💬 ChatSphere</h2>
-
-<div class="role" id="status">
-Connecting...
-</div>
-
-
-</div>
-
-
-
-<div class="messages" id="messages"></div>
-
-
-
-<div class="input-area">
-
-
-<input 
-id="msg"
-placeholder="Type message..."
-autocomplete="off">
-
-
-<button id="sendBtn">
-Send
-</button>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<script>
-
-
-// Render backend socket
-
-const socket = io(
-"https://chat-app-5e7i.onrender.com",
-{
-    transports:["polling"]
-}
-);
-
-
-
-
-const input =
-document.getElementById("msg");
-
-
-const button =
-document.getElementById("sendBtn");
-
-
-const messages =
-document.getElementById("messages");
-
-
-const status =
-document.getElementById("status");
-
-
-
-
-
-
-socket.on("connect",()=>{
-
-
-status.innerHTML="🟢 Online - User";
-
-
-console.log("Connected",socket.id);
-
+    transports:["polling","websocket"]
 
 });
 
 
 
+io.on("connection",(socket)=>{
 
 
-socket.on("connect_error",(error)=>{
+    console.log("User connected:",socket.id);
 
 
-status.innerHTML="🔴 Server Error";
 
+    socket.on("send_message",(data)=>{
 
-console.log(
-"Connection error",
-error
-);
 
+        console.log("Message:",data);
 
-});
 
 
+        io.emit(
+            "receive_message",
+            data
+        );
 
 
+    });
 
 
-function sendMessage(){
 
+    socket.on("disconnect",()=>{
 
-let text=input.value.trim();
+        console.log("User disconnected");
 
-
-
-if(text===""){
-return;
-}
-
-
-
-socket.emit(
-"send_message",
-{
-user:"User",
-message:text
-}
-);
-
-
-
-input.value="";
-
-
-}
-
-
-
-
-
-
-button.onclick = sendMessage;
-
-
-
-
-input.addEventListener(
-"keydown",
-function(event){
-
-
-if(event.key==="Enter"){
-
-sendMessage();
-
-}
-
-
-});
-
-
-
-
-
-
-
-socket.on(
-"receive_message",
-function(data){
-
-
-
-let div =
-document.createElement("div");
-
-
-
-div.className="message";
-
-
-div.innerHTML =
-"<b>"+data.user+
-"</b><br>"+
-data.message;
-
-
-
-messages.appendChild(div);
-
-
-
-messages.scrollTop =
-messages.scrollHeight;
+    });
 
 
 
@@ -320,10 +70,13 @@ messages.scrollHeight;
 
 
 
-</script>
+const PORT = process.env.PORT || 5000;
 
 
+server.listen(PORT,"0.0.0.0",()=>{
 
-</body>
+    console.log(
+        "Chat Server Running on port "+PORT
+    );
 
-</html>
+});
